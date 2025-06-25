@@ -8,6 +8,9 @@ public class User {
     private String phone;
     private String password;
 
+    public User() {
+    }
+
     public User(String NIC, String fist_name, String last_name, String email, String phone, String password) {
         this.NIC = NIC;
         this.fist_name = fist_name;

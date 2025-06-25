@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.usermanagement</groupId>
+    <groupId>com.carservice</groupId>
     <artifactId>car-service-tracker</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
@@ -16,9 +16,9 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <jakarta.servlet.version>5.0.0</jakarta.servlet.version>
-        <jstl.version>2.0.0</jstl.version>
-        <mysql.version>8.0.28</mysql.version>
-        <gson.version>2.8.9</gson.version>
+        <mysql.version>8.0.33</mysql.version>
+        <gson.version>2.10.1</gson.version>
+        <junit.version>5.9.3</junit.version>
     </properties>
 
     <dependencies>
@@ -28,18 +28,6 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <version>${jakarta.servlet.version}</version>
             <scope>provided</scope>
-        </dependency>
-
-        <!-- JSTL (optional, but good to have) -->
-        <dependency>
-            <groupId>jakarta.servlet.jsp.jstl</groupId>
-            <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
-            <version>${jstl.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish.web</groupId>
-            <artifactId>jakarta.servlet.jsp.jstl</artifactId>
-            <version>${jstl.version}</version>
         </dependency>
 
         <!-- MySQL Connector -->
@@ -60,7 +48,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.8.2</version>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -72,7 +66,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
+                <version>3.11.0</version>
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
@@ -105,13 +99,20 @@
             <plugin>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-maven-plugin</artifactId>
-                <version>11.0.9</version>
+                <version>11.0.15</version>
                 <configuration>
                     <webApp>
                         <contextPath>/</contextPath>
                     </webApp>
                     <scanIntervalSeconds>10</scanIntervalSeconds>
                 </configuration>
+            </plugin>
+
+            <!-- Surefire Plugin for JUnit tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
             </plugin>
         </plugins>
     </build>
