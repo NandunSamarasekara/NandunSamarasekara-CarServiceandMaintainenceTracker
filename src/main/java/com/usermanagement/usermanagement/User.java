@@ -1,36 +1,39 @@
 package com.usermanagement.usermanagement;
 
 public class User {
-    private String NIC;
-    private String fist_name;
+    private String nic;
+    private String first_name;
     private String last_name;
     private String email;
     private String phone;
     private String password;
+    private String confpassword;
 
-    public User(String NIC, String fist_name, String last_name, String email, String phone, String password) {
-        this.NIC = NIC;
-        this.fist_name = fist_name;
+    public User(String nic, String first_name, String last_name, String email, String phone, String password, String confpassword) {
+        this.nic = nic;
+        this.first_name = first_name;
         this.last_name = last_name;
         this.email = email;
         this.phone = phone;
         this.password = password;
+        this.confpassword = confpassword;
     }
 
+    // Getters and Setters
     public String getNIC() {
-        return NIC;
+        return nic;
     }
 
-    public void setNIC(String NIC) {
-        this.NIC = NIC;
+    public void setNIC(String nic) {
+        this.nic = nic;
     }
 
-    public String getFist_name() {
-        return fist_name;
+    public String getFirst_name() {
+        return first_name;
     }
 
-    public void setFist_name(String fist_name) {
-        this.fist_name = fist_name;
+    public void setFirst_name(String first_name) {
+        this.first_name = first_name;
     }
 
     public String getLast_name() {
@@ -63,5 +66,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getConfpassword() {
+        return confpassword;
+    }
+
+    public void setConfpassword(String confpassword) {
+        this.confpassword = confpassword;
     }
 }
