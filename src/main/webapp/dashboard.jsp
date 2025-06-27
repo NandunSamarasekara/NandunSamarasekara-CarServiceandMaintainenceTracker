@@ -12,6 +12,7 @@
     String nic = (String) userSession.getAttribute("nic");
     String firstName = (String) userSession.getAttribute("first_name");
     String lastName = (String) userSession.getAttribute("last_name");
+    String phone = (String) userSession.getAttribute("phone");
 %>
 <!DOCTYPE html>
 <html>
@@ -190,7 +191,7 @@
             <li><a href="#"><i class="fas fa-car"></i> My Vehicles</a></li>
             <li><a href="#"><i class="fas fa-calendar-alt"></i> Appointments</a></li>
             <li><a href="#"><i class="fas fa-history"></i> Service History</a></li>
-            <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+            <li><a href="Settings.jsp"><i class="fas fa-cog"></i> Settings</a></li>
         </ul>
     </div>
 
@@ -218,6 +219,12 @@
                 <div class="info-card">
                     <h3>NIC Number</h3>
                     <p><%= nic %></p>
+                </div>
+                <% } %>
+                <% if (phone != null) { %>
+                <div class="info-card">
+                    <h3>Phone Number</h3>
+                    <p><%= phone %></p>
                 </div>
                 <% } %>
                 <div class="info-card">

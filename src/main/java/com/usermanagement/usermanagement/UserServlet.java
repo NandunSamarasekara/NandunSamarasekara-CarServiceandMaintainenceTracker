@@ -62,6 +62,9 @@ public class UserServlet extends HttpServlet {
                 case "edit":
                     handleEdit(request, response);
                     break;
+                case "updateProfile":
+                    handleProfileUpdate(request, response);
+                    break;
                 default:
                     sendError(response, "Invalid action", HttpServletResponse.SC_BAD_REQUEST);
                     break;
@@ -88,25 +91,21 @@ public class UserServlet extends HttpServlet {
                 user.getLast_name() == null || user.getLast_name().isEmpty() ||
                 user.getEmail() == null || user.getEmail().isEmpty() ||
                 user.getPhone() == null || user.getPhone().isEmpty() ||
-                user.getPassword() == null || user.getPassword().isEmpty())
-        {
+                user.getPassword() == null || user.getPassword().isEmpty()) {
             sendError(response, "All fields are required", HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        // Check if NIC already exists
         if (userDAO.isNicExists(user.getNIC())) {
             sendError(response, "NIC already exists", HttpServletResponse.SC_CONFLICT);
             return;
         }
 
-        // Check if email already exists
         if (userDAO.isEmailExists(user.getEmail())) {
             sendError(response, "Email already exists", HttpServletResponse.SC_CONFLICT);
             return;
         }
 
-        // Insert the new user
         boolean success = userDAO.insertUser(user);
         if (success) {
             Map<String, String> responseData = new HashMap<>();
@@ -138,6 +137,7 @@ public class UserServlet extends HttpServlet {
             session.setAttribute("nic", user.getNIC());
             session.setAttribute("first_name", user.getFirst_name());
             session.setAttribute("last_name", user.getLast_name());
+            session.setAttribute("phone", user.getPhone());
 
             Map<String, String> responseData = new HashMap<>();
             responseData.put("status", "success");
@@ -145,6 +145,62 @@ public class UserServlet extends HttpServlet {
             response.getWriter().write(gson.toJson(responseData));
         } else {
             sendError(response, "Invalid Email or password", HttpServletResponse.SC_UNAUTHORIZED);
+        }
+    }
+
+    private void handleProfileUpdate(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, SQLException {
+        User user = parseUserFromRequest(request);
+        HttpSession session = request.getSession(false);
+
+        if (session == null || session.getAttribute("email") == null) {
+            sendError(response, "Session expired. Please login again.", HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+
+        String currentEmail = (String) session.getAttribute("email");
+        User currentUser = userDAO.getUserByEmail(currentEmail);
+
+        if (currentUser == null) {
+            sendError(response, "User not found", HttpServletResponse.SC_NOT_FOUND);
+            return;
+        }
+
+        // Update allowed fields only
+        currentUser.setFirst_name(user.getFirst_name());
+        currentUser.setLast_name(user.getLast_name());
+        currentUser.setPhone(user.getPhone());
+
+        boolean passwordChanged = false;
+        // Only update password if a new one was provided
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            currentUser.setPassword(user.getPassword());
+            passwordChanged = true;
+        }
+
+        boolean success = userDAO.updateUser(currentUser);
+        if (success) {
+            // Update session attributes
+            session.setAttribute("first_name", currentUser.getFirst_name());
+            session.setAttribute("last_name", currentUser.getLast_name());
+            session.setAttribute("phone", currentUser.getPhone());
+
+            Map<String, String> responseData = new HashMap<>();
+            responseData.put("status", "success");
+            responseData.put("message", "Profile updated successfully");
+
+            if (passwordChanged) {
+                // Invalidate session if password was changed
+                session.invalidate();
+                responseData.put("redirect", request.getContextPath() + "/login.jsp");
+                responseData.put("logout", "true");
+            } else {
+                responseData.put("redirect", request.getContextPath() + "/dashboard.jsp");
+            }
+
+            response.getWriter().write(gson.toJson(responseData));
+        } else {
+            sendError(response, "Failed to update profile", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
