@@ -35,8 +35,7 @@
             margin-bottom: 5px;
             color: #555;
         }
-        .form-group input[type="text"],
-        .form-group input[type="password"] {
+        .form-group input {
             width: calc(100% - 20px);
             padding: 10px;
             border: 1px solid #ddd;
@@ -52,16 +51,20 @@
             cursor: pointer;
             font-size: 16px;
             width: 100%;
-            box-sizing: border-box;
+            transition: background-color 0.3s;
         }
         .btn:hover {
             background-color: #218838;
+        }
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
         .message {
             margin-top: 15px;
             padding: 10px;
             border-radius: 4px;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .message.success {
             background-color: #d4edda;
@@ -92,14 +95,14 @@
     <div id="message" class="message"></div>
     <form id="loginForm">
         <div class="form-group">
-            <label for="nic">NIC:</label>
-            <input type="text" id="nic" name="nic" required>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
         </div>
         <div class="form-group">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
         </div>
-        <button type="submit" class="btn">Login</button>
+        <button type="submit" class="btn" id="loginBtn">Login</button>
     </form>
     <div class="register-link">
         Don't have an account? <a href="register.jsp">Register here</a>
@@ -107,53 +110,71 @@
 </div>
 
 <script>
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent default form submission
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
 
-        const nic = document.getElementById('nic').value;
-        const password = document.getElementById('password').value;
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
         const messageDiv = document.getElementById('message');
+        const loginBtn = document.getElementById('loginBtn');
 
         // Clear previous messages
         messageDiv.style.display = 'none';
         messageDiv.className = 'message';
         messageDiv.textContent = '';
 
-        const credentials = {
-            nic: nic,
-            password: password
-        };
+        // Validate inputs
+        if (!email || !password) {
+            showError(messageDiv, 'Please enter both email and password');
+            return;
+        }
 
-        fetch('<%= request.getContextPath() %>/user?action=login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(credentials)
-        })
-            .then(response => response.json().then(data => ({ status: response.status, body: data })))
-            .then(obj => {
-                if (obj.status === 200 && obj.body.status === 'success') {
-                    messageDiv.classList.add('success');
-                    messageDiv.textContent = 'Login successful! Redirecting...';
-                    messageDiv.style.display = 'block';
-                    // Redirect to dashboard
-                    setTimeout(() => {
-                        window.location.href = obj.body.redirect;
-                    }, 1000);
-                } else {
-                    messageDiv.classList.add('error');
-                    messageDiv.textContent = obj.body.message || 'Login failed. Please check your credentials.';
-                    messageDiv.style.display = 'block';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                messageDiv.classList.add('error');
-                messageDiv.textContent = 'An unexpected error occurred. Please try again later.';
-                messageDiv.style.display = 'block';
+        // Show loading state
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Logging in...';
+
+        try {
+            const response = await fetch('<%= request.getContextPath() %>/user?action=login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
             });
+
+            const data = await response.json();
+
+            if (response.ok && data.status === 'success') {
+                showSuccess(messageDiv, 'Login successful! Redirecting...');
+                // Redirect to dashboard
+                window.location.href = data.redirect;
+            } else {
+                throw new Error(data.message || 'Login failed');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showError(messageDiv, error.message || 'Login failed. Please try again.');
+        } finally {
+            // Reset button state
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+        }
     });
+
+    function showSuccess(element, message) {
+        element.classList.add('success');
+        element.textContent = message;
+        element.style.display = 'block';
+    }
+
+    function showError(element, message) {
+        element.classList.add('error');
+        element.textContent = message;
+        element.style.display = 'block';
+    }
 </script>
 </body>
 </html>

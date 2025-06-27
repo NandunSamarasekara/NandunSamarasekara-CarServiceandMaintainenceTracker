@@ -112,7 +112,7 @@ public class UserServlet extends HttpServlet {
             Map<String, String> responseData = new HashMap<>();
             responseData.put("status", "success");
             responseData.put("redirect", request.getContextPath() + "/login.jsp");
-            responseData.put("message", "Account created successfully! Login using your NIC: " + user.getNIC());
+            responseData.put("message", "Account created successfully! Login using your email: " + user.getEmail());
             response.getWriter().write(gson.toJson(responseData));
         } else {
             sendError(response, "Registration failed. Please try again.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -123,25 +123,28 @@ public class UserServlet extends HttpServlet {
             throws IOException, SQLException {
         Map<String, String> credentials = parseJsonRequest(request);
 
-        String nic = credentials.get("nic");
+        String email = credentials.get("email");
         String password = credentials.get("password");
 
-        if (nic == null || nic.isEmpty() || password == null || password.isEmpty()) {
-            sendError(response, "NIC and password are required", HttpServletResponse.SC_BAD_REQUEST);
+        if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
+            sendError(response, "Email and password are required", HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        boolean isValid = userDAO.validateUser(nic, password);
-        if (isValid) {
+        User user = userDAO.getUserByEmail(email);
+        if (user != null && user.getPassword().equals(password)) {
             HttpSession session = request.getSession();
-            session.setAttribute("nic", nic);
+            session.setAttribute("email", email);
+            session.setAttribute("nic", user.getNIC());
+            session.setAttribute("first_name", user.getFirst_name());
+            session.setAttribute("last_name", user.getLast_name());
 
             Map<String, String> responseData = new HashMap<>();
             responseData.put("status", "success");
             responseData.put("redirect", request.getContextPath() + "/dashboard.jsp");
             response.getWriter().write(gson.toJson(responseData));
         } else {
-            sendError(response, "Invalid NIC or password", HttpServletResponse.SC_UNAUTHORIZED);
+            sendError(response, "Invalid Email or password", HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 

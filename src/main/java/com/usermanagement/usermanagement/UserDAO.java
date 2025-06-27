@@ -16,6 +16,7 @@ public class UserDAO {
     // SQL queries
     private static final String INSERT_USERS_SQL = "INSERT INTO users (nic, first_name, last_name, email, phone, password) VALUES (?, ?, ?, ?, ?, ?)";
     private static final String SELECT_USER_BY_NIC = "SELECT nic, first_name, last_name, email, phone, password FROM users WHERE nic = ?";
+    private static final String SELECT_USER_BY_EMAIL = "SELECT nic, first_name, last_name, email, phone, password FROM users WHERE email = ?";
     private static final String SELECT_ALL_USERS = "SELECT nic, first_name, last_name, email, phone FROM users";
     private static final String DELETE_USERS_SQL = "DELETE FROM users WHERE nic = ?";
     private static final String UPDATE_USERS_SQL = "UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, password = ? WHERE nic = ?";
@@ -48,8 +49,8 @@ public class UserDAO {
         }
     }
 
-    public boolean insertUser (User user) throws SQLException {
-        logger.info("Attempting to insert user: " + user.getNIC());
+    public boolean insertUser(User user) throws SQLException {
+        logger.info("Attempting to insert user: " + user.getEmail());
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USERS_SQL)) {
 
@@ -66,7 +67,7 @@ public class UserDAO {
         }
     }
 
-    public boolean updateUser (User user) throws SQLException {
+    public boolean updateUser(User user) throws SQLException {
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(UPDATE_USERS_SQL)) {
 
@@ -81,7 +82,7 @@ public class UserDAO {
         }
     }
 
-    public User selectUser (String nic) throws SQLException {
+    public User selectUser(String nic) throws SQLException {
         User user = null;
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_NIC)) {
@@ -96,7 +97,30 @@ public class UserDAO {
                             rs.getString("email"),
                             rs.getString("phone"),
                             rs.getString("password"),
-                            null // No need for confpassword here
+                            null
+                    );
+                }
+            }
+        }
+        return user;
+    }
+
+    public User getUserByEmail(String email) throws SQLException {
+        User user = null;
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_EMAIL)) {
+
+            preparedStatement.setString(1, email);
+            try (ResultSet rs = preparedStatement.executeQuery()) {
+                if (rs.next()) {
+                    user = new User(
+                            rs.getString("nic"),
+                            rs.getString("first_name"),
+                            rs.getString("last_name"),
+                            rs.getString("email"),
+                            rs.getString("phone"),
+                            rs.getString("password"),
+                            null
                     );
                 }
             }
@@ -117,15 +141,15 @@ public class UserDAO {
                         rs.getString("last_name"),
                         rs.getString("email"),
                         rs.getString("phone"),
-                        null, // Don't return passwords in list operations
-                        null // No need for confpassword here
+                        null,
+                        null
                 ));
             }
         }
         return users;
     }
 
-    public boolean deleteUser (String nic) throws SQLException {
+    public boolean deleteUser(String nic) throws SQLException {
         try (Connection connection = getConnection();
              PreparedStatement statement = connection.prepareStatement(DELETE_USERS_SQL)) {
 
@@ -153,19 +177,11 @@ public class UserDAO {
         }
     }
 
-    public boolean validateUser (String nic, String password) throws SQLException {
-        String sql = "SELECT password FROM users WHERE nic = ?";
-        try (Connection connection = getConnection();
-             PreparedStatement statement = connection.prepareStatement(sql)) {
-
-            statement.setString(1, nic);
-            try (ResultSet rs = statement.executeQuery()) {
-                if (rs.next()) {
-                    String storedPassword = rs.getString("password");
-                    return storedPassword.equals(password);
-                }
-                return false;
-            }
+    public boolean validateUser(String email, String password) throws SQLException {
+        User user = getUserByEmail(email);
+        if (user != null) {
+            return user.getPassword().equals(password);
         }
+        return false;
     }
 }
