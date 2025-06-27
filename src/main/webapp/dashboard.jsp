@@ -60,7 +60,7 @@
     <h2>Welcome to Your Dashboard!</h2>
     <p>Hello, <%= nic %>!</p>
     <p>This is your personalized dashboard. You are successfully logged in.</p>
-    <a href="logout.jsp" class="btn">Logout</a>
+    <a href="login.jsp" class="btn">Logout</a>
 </div>
 </body>
 </html>
