@@ -32,7 +32,15 @@ public class UserServlet extends HttpServlet {
         response.setHeader("Access-Control-Allow-Origin", "*");
 
         try {
-            String action = request.getParameter("action");
+            // First try to parse the request as JSON
+            Map<String, String> requestData = parseJsonRequest(request);
+            String action = requestData.get("action");
+
+            // If action not found in JSON, try from parameters
+            if (action == null || action.isEmpty()) {
+                action = request.getParameter("action");
+            }
+
             if (action == null || action.isEmpty()) {
                 sendError(response, "Action parameter is required", HttpServletResponse.SC_BAD_REQUEST);
                 return;
@@ -42,16 +50,16 @@ public class UserServlet extends HttpServlet {
 
             switch (action) {
                 case "register":
-                    handleRegistration(request, response);
+                    handleRegistration(request, response, requestData);
                     break;
                 case "login":
-                    handleLogin(request, response);
+                    handleLogin(request, response, requestData);
                     break;
                 case "insert":
-                    handleInsert(request, response);
+                    handleInsert(request, response, requestData);
                     break;
                 case "update":
-                    handleUpdate(request, response);
+                    handleUpdate(request, response, requestData);
                     break;
                 case "delete":
                     handleDelete(request, response);
@@ -63,7 +71,7 @@ public class UserServlet extends HttpServlet {
                     handleEdit(request, response);
                     break;
                 case "updateProfile":
-                    handleProfileUpdate(request, response);
+                    handleProfileUpdate(request, response, requestData);
                     break;
                 default:
                     sendError(response, "Invalid action", HttpServletResponse.SC_BAD_REQUEST);
@@ -81,9 +89,17 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    private void handleRegistration(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException {
-        User user = parseUserFromRequest(request);
+    private void handleRegistration(HttpServletRequest request, HttpServletResponse response,
+                                    Map<String, String> requestData) throws IOException, SQLException {
+        User user = new User(
+                requestData.get("nic"),
+                requestData.get("first_name"),
+                requestData.get("last_name"),
+                requestData.get("email"),
+                requestData.get("phone"),
+                requestData.get("password"),
+                requestData.get("confpassword")
+        );
 
         // Validate required fields
         if (user.getNIC() == null || user.getNIC().isEmpty() ||
@@ -111,19 +127,17 @@ public class UserServlet extends HttpServlet {
             Map<String, String> responseData = new HashMap<>();
             responseData.put("status", "success");
             responseData.put("redirect", request.getContextPath() + "/login.jsp");
-            responseData.put("message", "Account created successfully! Login using your email: " + user.getEmail());
+            responseData.put("message", "Account created successfully!");
             response.getWriter().write(gson.toJson(responseData));
         } else {
-            sendError(response, "Registration failed. Please try again.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            sendError(response, "Registration failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
-    private void handleLogin(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException {
-        Map<String, String> credentials = parseJsonRequest(request);
-
-        String email = credentials.get("email");
-        String password = credentials.get("password");
+    private void handleLogin(HttpServletRequest request, HttpServletResponse response,
+                             Map<String, String> requestData) throws IOException, SQLException {
+        String email = requestData.get("email");
+        String password = requestData.get("password");
 
         if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
             sendError(response, "Email and password are required", HttpServletResponse.SC_BAD_REQUEST);
@@ -144,13 +158,12 @@ public class UserServlet extends HttpServlet {
             responseData.put("redirect", request.getContextPath() + "/dashboard.jsp");
             response.getWriter().write(gson.toJson(responseData));
         } else {
-            sendError(response, "Invalid Email or password", HttpServletResponse.SC_UNAUTHORIZED);
+            sendError(response, "Invalid credentials", HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 
-    private void handleProfileUpdate(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException {
-        User user = parseUserFromRequest(request);
+    private void handleProfileUpdate(HttpServletRequest request, HttpServletResponse response,
+                                     Map<String, String> requestData) throws IOException, SQLException {
         HttpSession session = request.getSession(false);
 
         if (session == null || session.getAttribute("email") == null) {
@@ -166,21 +179,21 @@ public class UserServlet extends HttpServlet {
             return;
         }
 
-        // Update allowed fields only
-        currentUser.setFirst_name(user.getFirst_name());
-        currentUser.setLast_name(user.getLast_name());
-        currentUser.setPhone(user.getPhone());
+        // Update fields from request data
+        currentUser.setFirst_name(requestData.get("first_name"));
+        currentUser.setLast_name(requestData.get("last_name"));
+        currentUser.setPhone(requestData.get("phone"));
 
         boolean passwordChanged = false;
-        // Only update password if a new one was provided
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            currentUser.setPassword(user.getPassword());
+        String newPassword = requestData.get("password");
+        if (newPassword != null && !newPassword.isEmpty()) {
+            currentUser.setPassword(newPassword);
             passwordChanged = true;
         }
 
         boolean success = userDAO.updateUser(currentUser);
         if (success) {
-            // Update session attributes
+            // Update session with new values
             session.setAttribute("first_name", currentUser.getFirst_name());
             session.setAttribute("last_name", currentUser.getLast_name());
             session.setAttribute("phone", currentUser.getPhone());
@@ -190,10 +203,8 @@ public class UserServlet extends HttpServlet {
             responseData.put("message", "Profile updated successfully");
 
             if (passwordChanged) {
-                // Invalidate session if password was changed
                 session.invalidate();
                 responseData.put("redirect", request.getContextPath() + "/login.jsp");
-                responseData.put("logout", "true");
             } else {
                 responseData.put("redirect", request.getContextPath() + "/dashboard.jsp");
             }
@@ -204,9 +215,17 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    private void handleInsert(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException {
-        User user = parseUserFromRequest(request);
+    private void handleInsert(HttpServletRequest request, HttpServletResponse response,
+                              Map<String, String> requestData) throws IOException, SQLException {
+        User user = new User(
+                requestData.get("nic"),
+                requestData.get("first_name"),
+                requestData.get("last_name"),
+                requestData.get("email"),
+                requestData.get("phone"),
+                requestData.get("password"),
+                null
+        );
 
         if (userDAO.isNicExists(user.getNIC())) {
             sendError(response, "NIC already exists", HttpServletResponse.SC_CONFLICT);
@@ -226,9 +245,18 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    private void handleUpdate(HttpServletRequest request, HttpServletResponse response)
-            throws IOException, SQLException {
-        User user = parseUserFromRequest(request);
+    private void handleUpdate(HttpServletRequest request, HttpServletResponse response,
+                              Map<String, String> requestData) throws IOException, SQLException {
+        User user = new User(
+                requestData.get("nic"),
+                requestData.get("first_name"),
+                requestData.get("last_name"),
+                requestData.get("email"),
+                requestData.get("phone"),
+                requestData.get("password"),
+                null
+        );
+
         boolean success = userDAO.updateUser(user);
         if (success) {
             sendSuccess(response, "User updated successfully");
@@ -275,12 +303,13 @@ public class UserServlet extends HttpServlet {
         }
     }
 
-    private User parseUserFromRequest(HttpServletRequest request) throws IOException {
-        return gson.fromJson(request.getReader(), User.class);
-    }
-
     private Map<String, String> parseJsonRequest(HttpServletRequest request) throws IOException {
-        return gson.fromJson(request.getReader(), Map.class);
+        try {
+            return gson.fromJson(request.getReader(), Map.class);
+        } catch (JsonSyntaxException e) {
+            logger.log(Level.WARNING, "Error parsing JSON request", e);
+            return new HashMap<>();
+        }
     }
 
     private void sendSuccess(HttpServletResponse response, String message) throws IOException {

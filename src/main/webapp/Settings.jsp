@@ -189,6 +189,16 @@
             color: #721c24;
             display: block;
         }
+
+        @media (max-width: 768px) {
+            .dashboard-container {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+            }
+        }
     </style>
 </head>
 <body>
@@ -224,7 +234,6 @@
             <div id="message" class="message"></div>
 
             <form id="profileForm">
-                <input type="hidden" name="action" value="updateProfile">
                 <input type="hidden" id="nic" name="nic" value="<%= nic %>">
 
                 <div class="form-group">
@@ -262,23 +271,25 @@
     document.getElementById('profileForm').addEventListener('submit', function(e) {
         e.preventDefault();
 
-        // Create FormData object from the form
-        const formData = new FormData(document.getElementById('profileForm'));
+        // Create form data object
+        const formData = {
+            action: 'updateProfile',
+            nic: document.getElementById('nic').value,
+            first_name: document.getElementById('first_name').value,
+            last_name: document.getElementById('last_name').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            password: document.getElementById('password').value
+        };
 
-        // Convert FormData to JSON
-        const jsonData = {};
-        formData.forEach((value, key) => {
-            jsonData[key] = value;
-        });
-
-        console.log('Submitting:', jsonData); // Debug log
+        console.log('Submitting:', formData);
 
         fetch('<%= request.getContextPath() %>/user', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(jsonData)
+            body: JSON.stringify(formData)
         })
             .then(response => {
                 console.log('Response status:', response.status);
