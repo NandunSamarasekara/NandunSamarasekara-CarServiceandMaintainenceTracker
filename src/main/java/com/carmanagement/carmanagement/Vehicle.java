@@ -1,11 +1,11 @@
 package com.carmanagement.carmanagement;
 
 public class Vehicle {
-    protected String numberplate;
-    protected String registereddistrict;
-    protected String enginenumber;
-    protected int enginecapacity;
-    protected String vehicletype;
+    private String numberplate;
+    private String registereddistrict;
+    private String enginenumber;
+    private int enginecapacity;
+    private String vehicletype;
 
     public Vehicle(String numberplate, String registereddistrict, String enginenumber, int enginecapacity, String vehicletype) {
         this.numberplate = numberplate;
