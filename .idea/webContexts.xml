@@ -6,6 +6,8 @@
         <entry key="file://$PROJECT_DIR$/src/main/webapp/Settings.jsp" value="file://$PROJECT_DIR$/src/main/webapp" />
         <entry key="file://$PROJECT_DIR$/src/main/webapp/html/auth/register.html" value="file://$PROJECT_DIR$/src/main/webapp/html/auth" />
         <entry key="file://$PROJECT_DIR$/src/main/webapp/html/user/list.jsp" value="file://$PROJECT_DIR$/src/main/webapp/html/user" />
+        <entry key="file://$PROJECT_DIR$/src/main/webapp/myvehicles.jsp" value="file://$PROJECT_DIR$/src/main/webapp" />
+        <entry key="file://$PROJECT_DIR$/src/main/webapp/registervehicle.jsp" value="file://$PROJECT_DIR$/src/main/webapp" />
       </map>
     </option>
   </component>
